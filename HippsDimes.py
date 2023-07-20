@@ -754,5 +754,5 @@ def main(input, output_prefix, connectivity_matrix, ensemble, alpha, selection, 
         #sc HIPPS
         model = GibbsSampling(cmap, connectivity_matrix, ensemble)
         model.run(iteration)
-if __name__ == '__main__':
+if __name__ ==  '__main__':
     main()
