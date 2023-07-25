@@ -410,6 +410,7 @@ class GibbsSampling:
         #Write xyz files
         self.nIter = nEpochs
         fout = open("Traj.xyz","w")
+        print("Printing structures:")
         for i in range(self.nIter):
             #Sample all z sequentially
             print(i)
@@ -548,7 +549,7 @@ class Optimize:
         dmap_maxent = a2dmap_theory(self.A, force_positive_definite=True)
 
         return loss_array, dmap_maxent, self.A
-
+    
 
 @click.command()
 @click.argument('input', nargs=1)
@@ -625,8 +626,9 @@ def main(input, output_prefix, connectivity_matrix, ensemble, alpha, selection, 
         elif input_type == 'sccmap':
             console.print("Reading single cell contact map from file")
             if connectivity_matrix is None:
-                #console.print("Connectivity matrix was not entered! Please enter connectivity matrix for single-cell Hi-C calculations")
-                raise Exception("Connectivity matrix was not entered! Please enter connectivity matrix for single-cell Hi-C calculations")
+                blue_console = Console(style="red")
+                blue_console.print("\n\nConnectivity matrix was not entered! Please enter connectivity matrix for single-cell Hi-C calculations")
+                raise Exception()
             if input_format == 'text':
                 cmap = np.loadtxt(input)
                 if ignore_missing_data:
@@ -656,37 +658,56 @@ def main(input, output_prefix, connectivity_matrix, ensemble, alpha, selection, 
             console.print("Load the provided connectivity matrix and will use it as initialization.")
         console.print("Initialization completed")
 
-
-    table = Table(title="Some Basic Parameters")
-    table.add_column("Input File", no_wrap=False)
-    table.add_column("Input Type", no_wrap=False)
-    table.add_column("Input Format", no_wrap=False)
-    table.add_column("Optimization method", no_wrap=False)
-    table.add_column("Matrix Size", no_wrap=False)
-    table.add_column("Number of Iterations", no_wrap=False)
-    table.add_column("Regularization", no_wrap=False)
-    table.add_column("Ignore Missing Data", no_wrap=False)
-    table.add_column("Matrix Balancing", no_wrap=False)
-    table.add_column("Matrix Normalization", no_wrap=False)
-    table.add_row(input,
-                  "{}".format("Contact Map" if input_type ==
-                              'cmap' else "Distance Map" if input_type == 'dmap' else "Single Cell Contact Map" if input_type == 'sccmap' else "Unknown"),
-                  "{}".format("Text" if input_format ==
-                              'text' else "Cooler File" if input_format == 'cooler' else "Unknown"),
-                  "{}".format("Iterative Scaling" if method == 'IS' else "Gradient Descent" if method ==
-                              'GD' else "Direct Inversion" if method == 'DI' else "Unknown"),
-                  "{}".format("{}x{}".format(
-                      dmap_target.shape[0], dmap_target.shape[1])),
-                  "{}".format(iteration),
-                  "{}".format(reg if lamd > 0.0 else "No" if lamd ==
-                              0.0 else "Unknown"),
-                  "{}".format("Yes" if ignore_missing_data else "No"),
-                  "{}".format("Yes" if balance else "No" if (
-                      balance is False and input_format == 'cooler') else "N/A"),
-                  "{}".format("No" if (not_normalize is True and input_type == 'cmap') else "Yes" if (
-                      not_normalize is False and input_type == 'cmap') else "N/A")
-                  )
-    console.print(table)
+    if input_type != 'sccmap':
+        #Print stuff for normal HIPPS
+        table = Table(title="Some Basic Parameters")
+        table.add_column("Input File", no_wrap=False)
+        table.add_column("Input Type", no_wrap=False)
+        table.add_column("Input Format", no_wrap=False)
+        table.add_column("Optimization method", no_wrap=False)
+        table.add_column("Matrix Size", no_wrap=False)
+        table.add_column("Number of Iterations", no_wrap=False)
+        table.add_column("Regularization", no_wrap=False)
+        table.add_column("Ignore Missing Data", no_wrap=False)
+        table.add_column("Matrix Balancing", no_wrap=False)
+        table.add_column("Matrix Normalization", no_wrap=False)
+        table.add_row(input,
+                    "{}".format("Contact Map" if input_type ==
+                                'cmap' else "Distance Map" if input_type == 'dmap' else "Single Cell Contact Map" if input_type == 'sccmap' else "Unknown"),
+                    "{}".format("Text" if input_format ==
+                                'text' else "Cooler File" if input_format == 'cooler' else "Unknown"),
+                    "{}".format("Iterative Scaling" if method == 'IS' else "Gradient Descent" if method ==
+                                'GD' else "Direct Inversion" if method == 'DI' else "Unknown"),
+                    "{}".format("{}x{}".format(
+                        dmap_target.shape[0], dmap_target.shape[1])),
+                    "{}".format(iteration),
+                    "{}".format(reg if lamd > 0.0 else "No" if lamd ==
+                                0.0 else "Unknown"),
+                    "{}".format("Yes" if ignore_missing_data else "No"),
+                    "{}".format("Yes" if balance else "No" if (
+                        balance is False and input_format == 'cooler') else "N/A"),
+                    "{}".format("No" if (not_normalize is True and input_type == 'cmap') else "Yes" if (
+                        not_normalize is False and input_type == 'cmap') else "N/A")
+                    )
+        console.print(table)
+    elif input_type == 'sccmap':
+        table = Table(title="Some Basic Parameters")
+        table.add_column("Input File", no_wrap=False)
+        table.add_column("Input Type", no_wrap=False)
+        table.add_column("Input Format", no_wrap=False)
+        table.add_column("Optimization method", no_wrap=False)
+        table.add_column("Matrix Size", no_wrap=False)
+        table.add_column("Number of Structures", no_wrap=False)
+        table.add_row(input,
+                    "{}".format("Single Cell Contact Map" if input_type == 'sccmap' else "Unknown"),
+                    "{}".format("Text" if input_format ==
+                                'text' else "Cooler File" if input_format == 'cooler' else "Unknown"),
+                    "{}".format("Gibbs Sampling"),            
+                    "{}".format("{}x{}".format(
+                        dmap_target.shape[0], dmap_target.shape[1])),
+                    "{}".format(iteration)
+                    )
+        console.print(table)
 
     if input_type != 'sccmap':
         #normal HIPPS
